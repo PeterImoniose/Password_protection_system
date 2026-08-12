@@ -1,34 +1,27 @@
-# 🔐 Password Protection System
+# Password Protection System
 
-A small CLI account system: create an account, log in, and recover a
-forgotten password via a security question - with real password hygiene
-underneath, not just a demo.
+This project started as a Jupyter notebook where I worked through building a login system from scratch, one idea at a time. The notebook ([`password system.ipynb`](password%20system.ipynb)) is left in the repo on purpose - it's a record of that process: a single hardcoded PIN check, then a class-based single-user login, then a multi-user account system with login attempts and a lockout, and finally an attempt at password recovery using a security question.
 
-This started as [`password system.ipynb`](password%20system.ipynb), a
-notebook showing the step-by-step build-up from a single hardcoded 4-digit
-PIN to a multi-user system with lockout and password recovery. This repo
-now also has a proper `.py` version with the security holes fixed.
+Once the logic was worked out in the notebook, I rewrote it properly as a standalone Python project (`account_system.py` and `password_system.py`), fixing the security problems that came from focusing on "does it work" rather than "is it actually safe" while I was learning.
 
----
+## What I fixed going from the notebook to the .py version
 
-## What changed from the notebook version
+The notebook stored every password and every security-question answer as plain text - literally readable if you opened the underlying data. It also only accepted a 4-digit PIN, which is just 10,000 possible combinations, easy to guess or brute-force. And once the account lockout triggered, there was no way for it to un-lock itself short of a manual reset.
 
-The notebook was a good learning exercise, but had real problems if taken
-at face value as a "password protection system":
+In the rewrite:
 
-| Issue in the notebook | Fixed in `account_system.py` |
-|---|---|
-| Passwords stored in plain text | Hashed with PBKDF2-HMAC-SHA256 (260,000 iterations) + a random salt per user |
-| 4-digit numeric PIN only (10,000 possible values - trivially brute-forced) | Passwords of any length, minimum 8 characters |
-| Security-question answers stored in plain text | Hashed the same way as passwords |
-| Account lockout was permanent until a manual reset | Lockout auto-expires after 5 minutes |
-| No persistence - accounts vanished when the program exited | Accounts persist to a local `accounts.json` (hashes only, never plaintext) |
-| Inconsistent use of `input()` vs `getpass()` for secrets | `getpass()` used everywhere a secret is entered, so it's never echoed to the screen |
-| One cell had a `break` outside any loop - a hard `SyntaxError` | N/A - rewritten from scratch |
+- Passwords and security-question answers are hashed with PBKDF2-HMAC-SHA256, salted per user, at 260,000 iterations - never stored as plain text.
+- Passwords must be at least 8 characters, not a 4-digit PIN.
+- A locked account now unlocks itself automatically after 5 minutes instead of staying locked forever.
+- Accounts persist between runs in `accounts.json` (only the hashes are saved, never the real password).
+- Every place a secret is typed uses `getpass()`, so nothing gets echoed to the terminal.
+- While reading back through the notebook I also found a cell where `break` was used outside of any loop - that's a Python `SyntaxError`, so that particular cell couldn't have actually produced the output sitting next to it. It doesn't carry over into the rewrite.
 
----
+## Project structure
 
-## Usage
+`account_system.py` holds all the actual account logic - hashing, login, lockout, persistence - with no `input()` or `print()` calls in it, so it can be tested directly. `password_system.py` is the interactive command-line menu that calls into it. `tests/test_account_system.py` has 19 tests covering account creation, login, lockout (including it expiring correctly), and password reset.
+
+## Running it
 
 ```bash
 python -m venv .venv
@@ -37,47 +30,18 @@ pip install pytest          # only needed to run the tests
 python password_system.py
 ```
 
-You'll get a menu to create an account, log in, or reset a password via
-your security question.
+You get a menu to create an account, log in, or reset a password using your security question.
 
----
-
-## Project structure
-
-- `account_system.py` - the actual account logic (hashing, lockout,
-  persistence). No `input()`/`print()` calls, so it's directly unit
-  testable.
-- `password_system.py` - the interactive CLI that drives `account_system.py`.
-- `tests/test_account_system.py` - pytest tests covering hashing, account
-  creation, login, lockout (including expiry), and password reset.
-
-## Testing
+## Running the tests
 
 ```bash
 pytest tests/
 ```
 
----
+## What this still isn't
 
-## Honest limitations
-
-This is a personal CLI tool, not production authentication infrastructure:
-
-- Accounts are stored in a plain JSON file on disk (hashed values only,
-  but no encryption at rest, no access control on the file itself).
-- Security-question recovery is inherently weaker than something like
-  email/SMS verification or TOTP - answers can sometimes be guessed or
-  looked up. It's kept here because it's part of what the original
-  notebook explored, not because it's the strongest option available.
-- No concurrent-access handling - not designed for multiple processes
-  writing to the same `accounts.json` at once.
-
-For anything beyond a personal/learning project, use a real auth provider
-or a well-audited library (e.g. `passlib`, `argon2-cffi`) instead of
-hand-rolled hashing like this.
-
----
+This is a personal project, not production authentication. The account file sits unencrypted on disk (just the hashes, but still). Security questions are a weaker recovery method than something like email or SMS verification - I kept it because it's what I originally built and wanted to secure properly, not because I'd recommend it for anything real. And there's no handling for two processes writing to `accounts.json` at the same time.
 
 ## Author
 
-**Avwerosuo Peter Imoniose**
+Avwerosuo Peter Imoniose
