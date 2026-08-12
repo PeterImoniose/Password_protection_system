@@ -1,7 +1,7 @@
 # 🔐 Password Protection System
 
 A small CLI account system: create an account, log in, and recover a
-forgotten password via a security question — with real password hygiene
+forgotten password via a security question - with real password hygiene
 underneath, not just a demo.
 
 This started as [`password system.ipynb`](password%20system.ipynb), a
@@ -19,12 +19,12 @@ at face value as a "password protection system":
 | Issue in the notebook | Fixed in `account_system.py` |
 |---|---|
 | Passwords stored in plain text | Hashed with PBKDF2-HMAC-SHA256 (260,000 iterations) + a random salt per user |
-| 4-digit numeric PIN only (10,000 possible values — trivially brute-forced) | Passwords of any length, minimum 8 characters |
+| 4-digit numeric PIN only (10,000 possible values - trivially brute-forced) | Passwords of any length, minimum 8 characters |
 | Security-question answers stored in plain text | Hashed the same way as passwords |
 | Account lockout was permanent until a manual reset | Lockout auto-expires after 5 minutes |
-| No persistence — accounts vanished when the program exited | Accounts persist to a local `accounts.json` (hashes only, never plaintext) |
+| No persistence - accounts vanished when the program exited | Accounts persist to a local `accounts.json` (hashes only, never plaintext) |
 | Inconsistent use of `input()` vs `getpass()` for secrets | `getpass()` used everywhere a secret is entered, so it's never echoed to the screen |
-| One cell had a `break` outside any loop — a hard `SyntaxError` | N/A — rewritten from scratch |
+| One cell had a `break` outside any loop - a hard `SyntaxError` | N/A - rewritten from scratch |
 
 ---
 
@@ -44,11 +44,11 @@ your security question.
 
 ## Project structure
 
-- `account_system.py` — the actual account logic (hashing, lockout,
+- `account_system.py` - the actual account logic (hashing, lockout,
   persistence). No `input()`/`print()` calls, so it's directly unit
   testable.
-- `password_system.py` — the interactive CLI that drives `account_system.py`.
-- `tests/test_account_system.py` — pytest tests covering hashing, account
+- `password_system.py` - the interactive CLI that drives `account_system.py`.
+- `tests/test_account_system.py` - pytest tests covering hashing, account
   creation, login, lockout (including expiry), and password reset.
 
 ## Testing
@@ -66,10 +66,10 @@ This is a personal CLI tool, not production authentication infrastructure:
 - Accounts are stored in a plain JSON file on disk (hashed values only,
   but no encryption at rest, no access control on the file itself).
 - Security-question recovery is inherently weaker than something like
-  email/SMS verification or TOTP — answers can sometimes be guessed or
+  email/SMS verification or TOTP - answers can sometimes be guessed or
   looked up. It's kept here because it's part of what the original
   notebook explored, not because it's the strongest option available.
-- No concurrent-access handling — not designed for multiple processes
+- No concurrent-access handling - not designed for multiple processes
   writing to the same `accounts.json` at once.
 
 For anything beyond a personal/learning project, use a real auth provider
